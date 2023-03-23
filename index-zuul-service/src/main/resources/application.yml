@@ -1,0 +1,19 @@
+zuul:
+  routes:
+    api-a:
+      path: /api-codes/**
+      serviceId: INDEX-CODES-SERVICE
+    api-b:
+      path: /api-backtest/**
+      serviceId: TRADING-BACKTEST-SERVICE
+    api-c:
+      path: /api-view/**
+      serviceId: TREND-TRADING-BACKTEST-VIEW
+    api-d:
+      path: /api-datas/**
+      serviceId: INDEX-DATA-SERVICE
+spring:
+  application:
+    name: zuul
+  zipkin:
+    base-url: http://localhost:9411
