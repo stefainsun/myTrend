@@ -2,9 +2,11 @@ package com.stefanie.trend.pojo;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class AnnualProfit {
     int year;
-    float indexIncome;
-    float trendIncome;
+    BigDecimal indexIncome;
+    BigDecimal trendIncome;
 }

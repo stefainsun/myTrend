@@ -1,6 +1,6 @@
 package com.stefanie.trend.service;
 
-import cn.hutool.core.collection.CollUtil;
+import com.stefanie.trend.mapper.IndexMapper;
 import com.stefanie.trend.pojo.IndexData;
 import com.stefanie.trend.util.SpringContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +19,13 @@ public class IndexDataServiceIm implements IndexDataService{
     Map<String,List<IndexData>> indexDatas = new HashMap<>();
     @Autowired
     SpringContextUtil springContextUtil;
+    @Autowired
+    IndexMapper indexMapper;
     @Override
     @Cacheable(key = "'indexData-code-'+#p0")
     public List<IndexData> get(String code) {
-        return CollUtil.toList();
+
+        return indexMapper.findAllIndexData(code);
     }
 
     @Override
@@ -42,7 +45,8 @@ public class IndexDataServiceIm implements IndexDataService{
 
         IndexDataServiceIm indexDataServiceIm = springContextUtil.getBean(IndexDataServiceIm.class);
         indexDataServiceIm.remove(code);
-        indexDatas.put(code,springContextUtil.fetch_indexes_from_third_part("http://localhost:8090/indexes2/"+code+".json"));
+//        indexDatas.put(code,springContextUtil.fetch_indexes_from_third_part("http://localhost:8090/indexes2/"+code+".json"));
+        indexDatas.put(code, indexMapper.findAllIndexData(code));
         return indexDataServiceIm.store(code);
     }
 }

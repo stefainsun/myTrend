@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@CacheConfig(cacheNames = "indexes")
+@CacheConfig(cacheNames = "my_trend")
 public class IndexServiceIm implements IndexService{
 
     @Override

@@ -2,11 +2,13 @@ package com.stefanie.trend.pojo;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class Trade {
     String buyDate;
     String sellDate;
-    float buyClosePoint;
-    float sellClosePoint;
-    float rate;
+    BigDecimal buyClosePoint;
+    BigDecimal sellClosePoint;
+    BigDecimal rate;
 }

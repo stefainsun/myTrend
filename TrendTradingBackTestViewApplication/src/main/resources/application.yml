@@ -9,6 +9,8 @@ spring:
     cache: false
     servlet:
       content-type: text/html
+#  mvc:
+#    static-path-pattern: /static/**
 management:
   endpoints:
     web:

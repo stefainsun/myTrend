@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 @Service
@@ -33,15 +35,25 @@ public class BackTestService {
         return result;
     }
     //  serviceCharge服务费， ma为天数，sellRate出售阈值，buyRate购买阈值，
-    public Map<String,Object> simulate(int ma, float sellRate, float buyRate, float serviceCharge, List<IndexData> indexDatas){
+    public Map<String,Object> simulate(int ma, BigDecimal sellRate, BigDecimal buyRate, BigDecimal serviceCharge, List<IndexData> indexDatas){
         Map<String,Object> results = new HashMap<>();
-        float closePoint,avg,max,increase_rate,decrease_rate,initCrash=1000,cash = initCrash,share = 0,value=0,init=0;
+//        float closePoint,avg,max,decrease_rate,initCrash=1000,cash = initCrash,share = 0,value=0,init=0;
+        BigDecimal increase_rate=new BigDecimal(0);
+        BigDecimal closePoint=new BigDecimal(0);
+        BigDecimal avg=new BigDecimal(0);
+        BigDecimal max=new BigDecimal(0);
+        BigDecimal decrease_rate=new BigDecimal(0);
+        BigDecimal initCrash=BigDecimal.valueOf(1000);
+        BigDecimal cash=initCrash;
+        int share =0;
+        BigDecimal value=new BigDecimal(0);
+        BigDecimal init=new BigDecimal(0);
         int winCount = 0;
-        float avgWinRate = 0;
+        BigDecimal avgWinRate = BigDecimal.valueOf(0);
         int lossCount = 0;
-        float avgLossRate = 0;
-        float totalWinRate = 0;
-        float totalLossRate = 0;
+        BigDecimal avgLossRate = BigDecimal.valueOf(0);
+        BigDecimal totalWinRate = BigDecimal.valueOf(0);
+        BigDecimal totalLossRate = BigDecimal.valueOf(0);
 
 
         List<Profit> profits = new ArrayList<>();
@@ -56,34 +68,39 @@ public class BackTestService {
             if(i>=ma+1){
                 avg = getMA(ma,i,indexDatas);
                 max = getMAX(ma,i,indexDatas);
-                if(closePoint/avg>buyRate){
+                if(closePoint.divide(avg,3, RoundingMode.HALF_UP).compareTo(buyRate)>0){
 //                    share += cash/closePoint;
                     if(share==0){
                         Trade trade = new Trade();
                         trade.setBuyDate(indexData.getDate());
                         trade.setBuyClosePoint(indexData.getClosePoint());
-                        share += cash/closePoint;
+                        share += cash.divide(closePoint,3, RoundingMode.HALF_UP).intValue();
                         trades.add(trade);
-                        cash=0;
+                        cash=BigDecimal.valueOf(0);
                     }
 
                 }
-                else if(closePoint/max<sellRate){
+                else if(closePoint.divide(max,3, RoundingMode.HALF_UP).compareTo(sellRate)<0){
                     if(share!=0){
                         Trade trade = trades.get(trades.size()-1);
                         trade.setSellDate(indexData.getDate());
                         trade.setSellClosePoint(indexData.getClosePoint());
-                        cash=share*closePoint*(1-serviceCharge);
-                        float rate = cash/initCrash;
+                        cash=BigDecimal.valueOf(share).multiply(closePoint.multiply(BigDecimal.valueOf(1).subtract(serviceCharge)));
+//                        cash=share*closePoint*(1-serviceCharge);
+                        BigDecimal rate = cash.divide(initCrash,3, RoundingMode.HALF_UP);
                         trade.setRate(rate);
                         share=0;
 
-                        if(trade.getSellClosePoint()<trade.getBuyClosePoint()){
+                        if(trade.getSellClosePoint().compareTo(trade.getBuyClosePoint())<0){
                             lossCount++;
-                            totalLossRate+=(trade.getSellClosePoint()-trade.getBuyClosePoint())/trade.getBuyClosePoint();
+                            totalLossRate=totalLossRate.add(trade.getSellClosePoint().subtract(trade.getBuyClosePoint()).divide(trade.getBuyClosePoint(),3, RoundingMode.HALF_UP));
+//                            totalLossRate+=(trade.getSellClosePoint()-trade.getBuyClosePoint())/trade.getBuyClosePoint();
+
                         }
                         else{
-                            totalWinRate+=(trade.getSellClosePoint()-trade.getBuyClosePoint())/trade.getBuyClosePoint();
+                            totalWinRate=totalWinRate.add(trade.getSellClosePoint().subtract(trade.getBuyClosePoint()).divide(trade.getBuyClosePoint(),3, RoundingMode.HALF_UP));
+
+//                            totalWinRate+=(trade.getSellClosePoint()-trade.getBuyClosePoint())/trade.getBuyClosePoint();
                             winCount++;
                         }
                     }
@@ -93,21 +110,21 @@ public class BackTestService {
                 }
             }
             if(share!=0){
-                value = share * closePoint;
+                value = BigDecimal.valueOf(share).multiply(closePoint);
             }
             else{
                 value = cash;
             }
-            float rate = value/initCrash;
+            BigDecimal rate = value.divide(initCrash,3, RoundingMode.HALF_UP);
             Profit profit = new Profit();
             profit.setDate(indexData.getDate());
-            profit.setValue(rate*init);
+            profit.setValue(rate.multiply(init));
             profits.add(profit);
-            System.out.println("利润为:"+profit.getValue());
+            System.out.println("rate="+rate+"\tvalue="+value+"\tshare="+share+"\t利润为:"+profit.getValue());
         }
         results.put("annualProfits",caculateAnnualProfits(indexDatas,profits));
-        avgWinRate=totalWinRate/winCount;
-        avgLossRate=totalLossRate/lossCount;
+        avgWinRate=totalWinRate.divide(BigDecimal.valueOf(winCount),3, RoundingMode.HALF_UP);
+        avgLossRate=totalLossRate.divide(BigDecimal.valueOf(lossCount),3, RoundingMode.HALF_UP);
         results.put("years",getYear(indexDatas));
         results.put("winCount", winCount);
         results.put("lossCount", lossCount);
@@ -118,32 +135,32 @@ public class BackTestService {
 
         return results;
     }
-    public float getMA(int ma,int i,List<IndexData> indexDatas){
+    public BigDecimal getMA(int ma,int i,List<IndexData> indexDatas){
         int start = i-ma-1;
         int end = i-1;
-        float sum=0;
+        BigDecimal sum=BigDecimal.valueOf(0);
         if(start<0){
-            return 0;
+            return BigDecimal.valueOf(0);
         }
         else{
             for(int j=start;j<end;j++){
-                sum += indexDatas.get(j).getClosePoint();
+                sum = sum.add(indexDatas.get(j).getClosePoint());
+//                sum += indexDatas.get(j).getClosePoint();
             }
         }
-        return sum/ma;
+        return sum.divide(BigDecimal.valueOf(ma),3, RoundingMode.HALF_UP);
 
     }
-    public float getMAX(int ma,int i,List<IndexData> indexDatas){
+    public BigDecimal getMAX(int ma,int i,List<IndexData> indexDatas){
         int start = i-ma-1;
         int end = i-1;
-        float max = 0;
-        float closePoint = 0;
+        BigDecimal max = BigDecimal.valueOf(0),closePoint=BigDecimal.valueOf(0);
         if(start<0){
-            return 0;
+            return BigDecimal.valueOf(0);
         }
         for(int j=start;j<end;j++){
             closePoint = indexDatas.get(j).getClosePoint();
-            if(max<closePoint){
+            if(max.compareTo(closePoint)<0){
                 max = closePoint;
             }
         }
@@ -159,7 +176,7 @@ public class BackTestService {
         return Convert.toInt(StrUtil.subBefore(date,"-",false));
     }
 
-    private float getIndexIncome(int year, List<IndexData> indexDatas) {
+    private BigDecimal getIndexIncome(int year, List<IndexData> indexDatas) {
         IndexData first=null,last=null;
         int year2;
         for(IndexData indexData:indexDatas){
@@ -171,9 +188,10 @@ public class BackTestService {
                 last=indexData;
             }
         }
-        return (last.getClosePoint()-first.getClosePoint())/first.getClosePoint();
+        return last.getClosePoint().subtract(first.getClosePoint()).divide(first.getClosePoint(),3, RoundingMode.HALF_UP);
+//        return (last.getClosePoint()-first.getClosePoint())/first.getClosePoint();
     }
-    private float getTrendIncome(int year, List<Profit> profits){
+    private BigDecimal getTrendIncome(int year, List<Profit> profits){
         Profit first=null,last=null;
         int year2;
         for(Profit profit:profits){
@@ -185,7 +203,13 @@ public class BackTestService {
                 last=profit;
             }
         }
-        return (last.getValue()-first.getValue())/first.getValue();
+        System.out.println(first.getValue());
+//        if(first.getValue().doubleValue()==0){
+//            return BigDecimal.valueOf(0);
+//        }
+        return last.getValue().subtract(first.getValue()).divide(first.getValue(),3, RoundingMode.HALF_UP);
+
+//        return (last.getValue()-first.getValue())/first.getValue();
     }
     private List<AnnualProfit> caculateAnnualProfits(List<IndexData> indexDatas, List<Profit> profits) {
         int firstYear = getYear(indexDatas.get(0).getDate());

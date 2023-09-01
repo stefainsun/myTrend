@@ -34,23 +34,23 @@ public class SpringContextUtil implements ApplicationContextAware {
     }
     @Autowired
     RestTemplate restTemplate;
-    public List<IndexData> fetch_indexes_from_third_part(String url){
-        List<Map> temp = restTemplate.getForObject(url,List.class);
-        return map2List(temp);
-
-    }
-    public List<IndexData> map2List(List<Map> temp){
-        List<IndexData> indexDatas = new ArrayList<>();
-        for(Map map:temp){
-            String code = map.get("date").toString();
-            float name =  Convert.toFloat(map.get("closePoint"));
-            IndexData indexData = new IndexData(code,name);
-            indexDatas.add(indexData);
-        }
-        return indexDatas;
-    }
-    public List<Index> third_part_not_connected(){
-        Index index= new Index("000","无效代码");
-        return CollUtil.toList(index);
-    }
+//    public List<IndexData> fetch_indexes_from_third_part(String url){
+//        List<Map> temp = restTemplate.getForObject(url,List.class);
+//        return map2List(temp);
+//
+//    }
+//    public List<IndexData> map2List(List<Map> temp){
+//        List<IndexData> indexDatas = new ArrayList<>();
+//        for(Map map:temp){
+//            String code = map.get("date").toString();
+//            float name =  Convert.toFloat(map.get("closePoint"));
+//            IndexData indexData = new IndexData(code,name);
+//            indexDatas.add(indexData);
+//        }
+//        return indexDatas;
+//    }
+//    public List<Index> third_part_not_connected(){
+//        Index index= new Index("000","无效代码");
+//        return CollUtil.toList(index);
+//    }
 }

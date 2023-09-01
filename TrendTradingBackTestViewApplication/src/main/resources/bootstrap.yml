@@ -1,15 +1,15 @@
-spring:
-  cloud:
-    config:
-      label: master
-      profile: dev
-      discovery:
-        enabled:  true
-        serviceId:  index-config-server
-    bus:
-      enabled: true
-      trace:
-        enabled: true
+#spring:
+#  cloud:
+#    config:
+#      label: master
+#      profile: dev
+#      discovery:
+#        enabled:  true
+#        serviceId:  index-config-server
+#    bus:
+#      enabled: true
+#      trace:
+#        enabled: true
 eureka:
   client:
     serviceUrl:

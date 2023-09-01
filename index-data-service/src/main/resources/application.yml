@@ -3,6 +3,11 @@ eureka:
     service-url:
       defaultZone: http://localhost:8761/eureka/
 spring:
+  redis:
+    host: localhost          # Redis 服务器主机名
+    port: 6379               # Redis 服务器端口号
+    database: 0              # Redis 数据库编号
+    timeout: 3000            # 连接超时时间（毫秒）
   application:
     name: index-data-service
   zipkin:

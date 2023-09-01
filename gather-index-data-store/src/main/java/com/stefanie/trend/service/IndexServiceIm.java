@@ -2,6 +2,7 @@ package com.stefanie.trend.service;
 
 import cn.hutool.core.collection.CollUtil;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.stefanie.trend.mapper.IndexMapper;
 import com.stefanie.trend.pojo.Index;
 import com.stefanie.trend.util.SpringContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +22,13 @@ public class IndexServiceIm implements IndexService{
     private List<Index> indexes;
     @Autowired
     RestTemplate restTemplate;
+    @Autowired
+    IndexMapper indexMapper;
     @Override
     @Cacheable(key = "'all_codes'")
     public List<Index> get() {
 //        CollUtil.toList();
-        return CollUtil.toList();
+        return indexMapper.findAllIndexCode();
     }
 
     @Override
@@ -46,28 +49,29 @@ public class IndexServiceIm implements IndexService{
     public List<Index> refresh() {
         IndexServiceIm indexServiceIm = SpringContextUtil.getBean(IndexServiceIm.class);
         indexServiceIm.remove();
-        indexes = fetch_indexes_from_third_part();
+//        indexes = fetch_indexes_from_third_part();
+        indexes = indexMapper.findAllIndexCode();
         return  indexServiceIm.store();
     }
 
 
-    public List<Index> fetch_indexes_from_third_part(){
-        List<Map> temp = restTemplate.getForObject("http://localhost:8090/indexes2/codes.json",List.class);
-        return map2List(temp);
-
-    }
-    public List<Index> map2List(List<Map> temp){
-        List<Index> indexes = new ArrayList<>();
-        for(Map map:temp){
-            String code = map.get("code").toString();
-            String name = map.get("name").toString();
-            Index index = new Index(code,name);
-            indexes.add(index);
-        }
-        return indexes;
-    }
-    public List<Index> third_part_not_connected(){
-        Index index= new Index("000","无效代码");
-        return CollUtil.toList(index);
-    }
+//    public List<Index> fetch_indexes_from_third_part(){
+//        List<Map> temp = restTemplate.getForObject("http://localhost:8090/indexes2/codes.json",List.class);
+//        return map2List(temp);
+//
+//    }
+//    public List<Index> map2List(List<Map> temp){
+//        List<Index> indexes = new ArrayList<>();
+//        for(Map map:temp){
+//            String code = map.get("code").toString();
+//            String name = map.get("name").toString();
+//            Index index = new Index(code,name);
+//            indexes.add(index);
+//        }
+//        return indexes;
+//    }
+//    public List<Index> third_part_not_connected(){
+//        Index index= new Index("000","无效代码");
+//        return CollUtil.toList(index);
+//    }
 }
